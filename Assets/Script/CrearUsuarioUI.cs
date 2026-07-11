@@ -3,12 +3,14 @@ using System.Security.Cryptography;
 using System.Text;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Audio;
 using UnityEngine.UI;
 
 /// <summary>
 /// Controla la pantalla "Crear nuevo usuario" que usa el admin/docente
 /// para dar de alta alumnos, profesores, etc.
 /// </summary>
+
 public class CrearUsuarioUI : MonoBehaviour
 {
     [Header("Panel principal")]
@@ -30,21 +32,39 @@ public class CrearUsuarioUI : MonoBehaviour
     [Header("Feedback de error (opcional)")]
     [SerializeField] private TMP_Text textoError;
 
+    private System.Collections.Generic.List<Rol> _rolesCache;
+
     private void OnEnable()
     {
-        CargarRoles();
-        LimpiarFormulario();
-
         botonCrear.onClick.AddListener(OnCrearUsuario);
         botonCancelar.onClick.AddListener(OnCancelar);
         inputDni.onValueChanged.AddListener(OnDniChanged);
+
+        LimpiarFormulario();
+
+        // La base de datos puede tardar un frame (o más, en Android) en
+        // estar lista, así que esperamos el evento en vez de asumir que
+        // ya está disponible.
+        if (DatabaseManager.Instance != null && DatabaseManager.Instance.EstaLista)
+        {
+            CargarRoles();
+        }
+        else if (DatabaseManager.Instance != null)
+        {
+            DatabaseManager.Instance.OnBaseDeDatosLista += CargarRoles;
+        }
     }
+
+
 
     private void OnDisable()
     {
         botonCrear.onClick.RemoveListener(OnCrearUsuario);
         botonCancelar.onClick.RemoveListener(OnCancelar);
         inputDni.onValueChanged.RemoveListener(OnDniChanged);
+
+        if (DatabaseManager.Instance != null)
+            DatabaseManager.Instance.OnBaseDeDatosLista -= CargarRoles;
     }
 
     /// <summary>Carga los roles disponibles (Rol table) en el dropdown.</summary>
@@ -60,8 +80,6 @@ public class CrearUsuarioUI : MonoBehaviour
         dropdownRol.AddOptions(opciones);
         _rolesCache = roles;
     }
-
-    private System.Collections.Generic.List<Rol> _rolesCache;
 
     /// <summary>Muestra en el campo de contraseña una vista previa (el DNI, tal como indica el diseño).</summary>
     private void OnDniChanged(string nuevoDni)
@@ -90,6 +108,12 @@ public class CrearUsuarioUI : MonoBehaviour
 
     private void OnCrearUsuario()
     {
+        if (_rolesCache == null || _rolesCache.Count == 0)
+        {
+            MostrarError("Los roles todavía no cargaron, esperá un segundo.");
+            return;
+        }
+
         string nombre = inputNombre.text.Trim();
         string apellido = inputApellido.text.Trim();
         string dni = inputDni.text.Trim();
@@ -145,12 +169,13 @@ public class CrearUsuarioUI : MonoBehaviour
             RolId = rolSeleccionado.Id
         };
 
-        int usuarioId = DatabaseManager.Instance.CrearUsuario(nuevoUsuario);
+        DatabaseManager.Instance.CrearUsuario(nuevoUsuario);
 
-        // TODO: según el rol elegido, insertar también la fila correspondiente
-        // en Alumno / Profesor / Preceptor / Director usando usuarioId.
-        // Ese formulario probablemente necesite campos adicionales
-        // (ej: grado/curso para Alumno) que todavía no están en esta pantalla.
+        // NOTA: acá todavía NO se crea la fila en Alumno/Profesor/Preceptor/
+        // Director. Eso se hace en la pantalla aparte donde se carguen los
+        // datos propios de cada rol (grado/curso, turno, etc). Los métodos
+        // CrearAlumno/CrearProfesor/CrearPreceptor/CrearDirector ya están
+        // listos en DatabaseManager para cuando llegue ese momento.
 
         panelFormulario.SetActive(false);
         panelUsuarioCreado.SetActive(true);

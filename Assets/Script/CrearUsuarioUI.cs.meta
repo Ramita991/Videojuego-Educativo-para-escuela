@@ -1,2 +1,22 @@
 fileFormatVersion: 2
 guid: 60198c79ba1bf1743bfeb2689101865c
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - panelFormulario: {instanceID: 0}
+  - panelUsuarioCreado: {instanceID: 0}
+  - inputNombre: {instanceID: 0}
+  - inputApellido: {instanceID: 0}
+  - inputDni: {instanceID: 0}
+  - inputMail: {instanceID: 0}
+  - dropdownRol: {instanceID: 0}
+  - inputPasswordPreview: {instanceID: 0}
+  - botonCancelar: {instanceID: 0}
+  - botonCrear: {instanceID: 0}
+  - textoError: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
