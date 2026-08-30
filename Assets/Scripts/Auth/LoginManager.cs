@@ -52,7 +52,7 @@ public class LoginManager : MonoBehaviour
         if (email == "alumno@test.com" && password == "12345678")
         {
             Debug.Log("Login exitoso como Alumno");
-            // SceneManager.LoadScene("AlumnoDashboardScene");
+             SceneManager.LoadScene("AlumnoDashboardScene");
         }
         else if (email == "docente@test.com" && password == "12345678")
         {
