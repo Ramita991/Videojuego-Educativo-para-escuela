@@ -226,6 +226,10 @@ public class DatabaseManager : MonoBehaviour
     {
         return _connection.Table<Rol>().ToList();
     }
+    public List<Usuario> GetTodosLosUsuarios()
+    {
+        return _connection.Table<Usuario>().ToList();
+    }
 
     public Usuario GetUsuarioPorMail(string mail)
     {
