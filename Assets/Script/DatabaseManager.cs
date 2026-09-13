@@ -141,6 +141,23 @@ public class GradoCursoOpcion
     public string Etiqueta;
 }
 
+// ---------- NUEVO: códigos de recuperación de contraseña (HU-008) ----------
+[Table("codigo_recuperacion")]
+public class CodigoRecuperacion
+{
+    [PrimaryKey, AutoIncrement, Column("id")]
+    public int Id { get; set; }
+
+    [Column("mail")]
+    public string Mail { get; set; }
+
+    [Column("codigo")]
+    public string Codigo { get; set; }
+
+    [Column("expira_utc_ticks")]
+    public long ExpiraUtcTicks { get; set; }
+}
+
 // Agregar aquí las propiedades específicas de Alumno (ej: grado, curso, etc.)
 // TODO: agregar el resto de los modelos (Alumno, Profesor, Preceptor,
 // Director, Grado, Curso, Materia, Avatar, etc.) siguiendo este mismo
@@ -214,6 +231,11 @@ public class DatabaseManager : MonoBehaviour
         }
 
         _connection = new SQLiteConnection(dbPath);
+
+        // Nos aseguramos de que la tabla de códigos de recuperación exista,
+        // aunque la base venga de una versión vieja sin esta tabla.
+        _connection.CreateTable<CodigoRecuperacion>();
+
         Debug.Log($"Base de datos inicializada en: {dbPath}");
 
         EstaLista = true;
@@ -252,6 +274,37 @@ public class DatabaseManager : MonoBehaviour
     public bool ExisteDni(string dni)
     {
         return _connection.Table<Usuario>().Where(u => u.Dni == dni).Count() > 0;
+    }
+
+    // ---------- NUEVO: códigos de recuperación (HU-008) ----------
+
+    /// <summary>Guarda un código nuevo para ese mail, descartando códigos previos.</summary>
+    public void GuardarCodigoRecuperacion(string mail, string codigo, long expiraUtcTicks)
+    {
+        var viejos = _connection.Table<CodigoRecuperacion>().Where(c => c.Mail == mail).ToList();
+        foreach (var v in viejos) _connection.Delete(v);
+
+        _connection.Insert(new CodigoRecuperacion
+        {
+            Mail = mail,
+            Codigo = codigo,
+            ExpiraUtcTicks = expiraUtcTicks
+        });
+    }
+
+    /// <summary>True si el código coincide con el último generado para ese mail y no venció.</summary>
+    public bool ValidarCodigoRecuperacion(string mail, string codigoIngresado)
+    {
+        var registro = _connection.Table<CodigoRecuperacion>()
+                                   .Where(c => c.Mail == mail)
+                                   .OrderByDescending(c => c.Id)
+                                   .FirstOrDefault();
+
+        if (registro == null) return false;
+        if (registro.Codigo != codigoIngresado) return false;
+
+        bool vencido = DateTime.UtcNow.Ticks > registro.ExpiraUtcTicks;
+        return !vencido;
     }
 
     // ---------- Grado / Curso ----------
