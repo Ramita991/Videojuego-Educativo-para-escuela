@@ -35,7 +35,7 @@ public class CrearUsuarioUI : MonoBehaviour
 
     [Header("Feedback de error (opcional)")]
     [SerializeField] private TMP_Text textoError;
-
+    public System.Action OnFormularioCerrado;
     private System.Collections.Generic.List<Rol> _rolesCache;
     private Coroutine _corrutinaOcultarConfirmacion;
 
@@ -111,6 +111,8 @@ public class CrearUsuarioUI : MonoBehaviour
     {
         LimpiarFormulario();
         // Acá podrías además cerrar la pantalla o volver al listado de usuarios.
+        gameObject.SetActive(false);
+        OnFormularioCerrado?.Invoke();
     }
 
     private void OnCrearUsuario()
@@ -162,9 +164,6 @@ public class CrearUsuarioUI : MonoBehaviour
         Rol rolSeleccionado = _rolesCache[dropdownRol.value];
 
         // ---------- Crear el usuario ----------
-        // Nota de seguridad: guardamos un hash de la contraseña, no el DNI
-        // en texto plano, aunque la contraseña INICIAL sea igual al DNI.
-        // Así, si alguien accede a la base de datos, no ve las contraseñas reales.
         var nuevoUsuario = new Usuario
         {
             Nombre = nombre,
@@ -178,38 +177,20 @@ public class CrearUsuarioUI : MonoBehaviour
 
         DatabaseManager.Instance.CrearUsuario(nuevoUsuario);
 
-        // NOTA: acá todavía NO se crea la fila en Alumno/Profesor/Preceptor/
-        // Director. Eso se hace en la pantalla aparte donde se carguen los
-        // datos propios de cada rol (grado/curso, turno, etc). Los métodos
-        // CrearAlumno/CrearProfesor/CrearPreceptor/CrearDirector ya están
-        // listos en DatabaseManager para cuando llegue ese momento.
-
         panelFormulario.SetActive(false);
         panelUsuarioCreado.SetActive(true);
-        _corrutinaOcultarConfirmacion = StartCoroutine(OcultarConfirmacionAutomatico());
+
+        // Dispara la espera de 2 segundos antes de volver a tu tabla
+        StartCoroutine(CerrarTrasConfirmacion());
     }
 
-    private System.Collections.IEnumerator OcultarConfirmacionAutomatico()
+    private System.Collections.IEnumerator CerrarTrasConfirmacion()
     {
-        yield return new WaitForSeconds(segundosAntesDeOcultarConfirmacion);
-        OcultarConfirmacion();
+        yield return new WaitForSeconds(2f);
+        LimpiarFormulario();
+        gameObject.SetActive(false);
+        OnFormularioCerrado?.Invoke();
     }
-
-    private void OcultarConfirmacionManual()
-    {
-        // Si el usuario clickea antes de que termine la cuenta regresiva,
-        // la cancelamos para no ocultar dos veces algo que ya está oculto.
-        if (_corrutinaOcultarConfirmacion != null)
-            StopCoroutine(_corrutinaOcultarConfirmacion);
-
-        OcultarConfirmacion();
-    }
-
-    private void OcultarConfirmacion()
-    {
-        LimpiarFormulario(); // ya deja panelFormulario activo y panelUsuarioCreado oculto
-    }
-
     private void MostrarError(string mensaje)
     {
         if (textoError != null)
