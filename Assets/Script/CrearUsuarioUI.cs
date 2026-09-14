@@ -29,16 +29,22 @@ public class CrearUsuarioUI : MonoBehaviour
     [SerializeField] private Button botonCancelar;
     [SerializeField] private Button botonCrear;
 
+    [Header("Confirmación de éxito")]
+    [SerializeField] private Button botonCerrarConfirmacion;
+    [SerializeField] private float segundosAntesDeOcultarConfirmacion = 3f;
+
     [Header("Feedback de error (opcional)")]
     [SerializeField] private TMP_Text textoError;
     public System.Action OnFormularioCerrado;
     private System.Collections.Generic.List<Rol> _rolesCache;
+    private Coroutine _corrutinaOcultarConfirmacion;
 
     private void OnEnable()
     {
         botonCrear.onClick.AddListener(OnCrearUsuario);
         botonCancelar.onClick.AddListener(OnCancelar);
         inputDni.onValueChanged.AddListener(OnDniChanged);
+        botonCerrarConfirmacion.onClick.AddListener(OcultarConfirmacionManual);
 
         LimpiarFormulario();
 
@@ -62,6 +68,7 @@ public class CrearUsuarioUI : MonoBehaviour
         botonCrear.onClick.RemoveListener(OnCrearUsuario);
         botonCancelar.onClick.RemoveListener(OnCancelar);
         inputDni.onValueChanged.RemoveListener(OnDniChanged);
+        botonCerrarConfirmacion.onClick.RemoveListener(OcultarConfirmacionManual);
 
         if (DatabaseManager.Instance != null)
             DatabaseManager.Instance.OnBaseDeDatosLista -= CargarRoles;
