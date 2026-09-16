@@ -43,7 +43,7 @@ public class DesactivarUsuarioUI : MonoBehaviour
         panelConfirmacion.SetActive(false);
         panelResultado.SetActive(true);
 
-        //Cambiar Estado
+        //Cambiar Estado Actual
 
         Debug.Log("Botón Desactivar usuario presionado");
 
