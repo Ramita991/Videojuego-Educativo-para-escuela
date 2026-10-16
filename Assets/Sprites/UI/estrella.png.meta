@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 02d14a49c2f0ac64297302925c70624d
+guid: 0318efc399f123f49a9500aff646df37
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 2744528244899517034
-    second: controlador_juego_0
+      213: 3220710757660816405
+    second: estrella_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: controlador_juego_0
+      name: estrella_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 96
-        width: 512
-        height: 320
+        x: 24
+        y: 35
+        width: 464
+        height: 442
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: a621349c5e5861620800000000000000
-      internalID: 2744528244899517034
+      spriteID: 514f6aabe5342bc20800000000000000
+      internalID: 3220710757660816405
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      controlador_juego_0: 2744528244899517034
+      estrella_0: 3220710757660816405
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
