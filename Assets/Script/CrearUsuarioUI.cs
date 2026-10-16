@@ -10,7 +10,6 @@ using UnityEngine.UI;
 /// Controla la pantalla "Crear nuevo usuario" que usa el admin/docente
 /// para dar de alta alumnos, profesores, etc.
 /// </summary>
-
 public class CrearUsuarioUI : MonoBehaviour
 {
     [Header("Panel principal")]
@@ -29,16 +28,22 @@ public class CrearUsuarioUI : MonoBehaviour
     [SerializeField] private Button botonCancelar;
     [SerializeField] private Button botonCrear;
 
+    [Header("Confirmación de éxito")]
+    [SerializeField] private Button botonCerrarConfirmacion;
+    [SerializeField] private float segundosAntesDeOcultarConfirmacion = 3f;
+
     [Header("Feedback de error (opcional)")]
     [SerializeField] private TMP_Text textoError;
-
+    public System.Action OnFormularioCerrado;
     private System.Collections.Generic.List<Rol> _rolesCache;
+    private Coroutine _corrutinaOcultarConfirmacion;
 
     private void OnEnable()
     {
         botonCrear.onClick.AddListener(OnCrearUsuario);
         botonCancelar.onClick.AddListener(OnCancelar);
         inputDni.onValueChanged.AddListener(OnDniChanged);
+        botonCerrarConfirmacion.onClick.AddListener(OcultarConfirmacionManual);
 
         LimpiarFormulario();
 
@@ -55,16 +60,24 @@ public class CrearUsuarioUI : MonoBehaviour
         }
     }
 
-
-
     private void OnDisable()
     {
         botonCrear.onClick.RemoveListener(OnCrearUsuario);
         botonCancelar.onClick.RemoveListener(OnCancelar);
         inputDni.onValueChanged.RemoveListener(OnDniChanged);
+        botonCerrarConfirmacion.onClick.RemoveListener(OcultarConfirmacionManual);
 
         if (DatabaseManager.Instance != null)
             DatabaseManager.Instance.OnBaseDeDatosLista -= CargarRoles;
+    }
+
+    // --- EL MÉTODO AHORA ESTÁ AQUÍ AFUERA (CORRECTAMENTE UBICADO) ---
+    private void OcultarConfirmacionManual()
+    {
+        // Puedes agregar aquí la lógica para cerrar o limpiar la confirmación manualmente si lo deseas
+        LimpiarFormulario();
+        gameObject.SetActive(false);
+        OnFormularioCerrado?.Invoke();
     }
 
     /// <summary>Carga los roles disponibles (Rol table) en el dropdown.</summary>
@@ -103,7 +116,8 @@ public class CrearUsuarioUI : MonoBehaviour
     private void OnCancelar()
     {
         LimpiarFormulario();
-        // Acá podrías además cerrar la pantalla o volver al listado de usuarios.
+        gameObject.SetActive(false);
+        OnFormularioCerrado?.Invoke();
     }
 
     private void OnCrearUsuario()
@@ -155,9 +169,6 @@ public class CrearUsuarioUI : MonoBehaviour
         Rol rolSeleccionado = _rolesCache[dropdownRol.value];
 
         // ---------- Crear el usuario ----------
-        // Nota de seguridad: guardamos un hash de la contraseña, no el DNI
-        // en texto plano, aunque la contraseña INICIAL sea igual al DNI.
-        // Así, si alguien accede a la base de datos, no ve las contraseñas reales.
         var nuevoUsuario = new Usuario
         {
             Nombre = nombre,
@@ -171,14 +182,19 @@ public class CrearUsuarioUI : MonoBehaviour
 
         DatabaseManager.Instance.CrearUsuario(nuevoUsuario);
 
-        // NOTA: acá todavía NO se crea la fila en Alumno/Profesor/Preceptor/
-        // Director. Eso se hace en la pantalla aparte donde se carguen los
-        // datos propios de cada rol (grado/curso, turno, etc). Los métodos
-        // CrearAlumno/CrearProfesor/CrearPreceptor/CrearDirector ya están
-        // listos en DatabaseManager para cuando llegue ese momento.
-
         panelFormulario.SetActive(false);
         panelUsuarioCreado.SetActive(true);
+
+        // Dispara la espera antes de volver a la tabla
+        StartCoroutine(CerrarTrasConfirmacion());
+    }
+
+    private System.Collections.IEnumerator CerrarTrasConfirmacion()
+    {
+        yield return new WaitForSeconds(segundosAntesDeOcultarConfirmacion); // Usamos la variable que tenías declarada
+        LimpiarFormulario();
+        gameObject.SetActive(false);
+        OnFormularioCerrado?.Invoke();
     }
 
     private void MostrarError(string mensaje)
@@ -190,9 +206,7 @@ public class CrearUsuarioUI : MonoBehaviour
     }
 
     /// <summary>
-    /// Genera un hash SHA-256 de la contraseña. No es el método más robusto
-    /// que existe (lo ideal a futuro es agregar "salt"), pero es muchísimo
-    /// mejor que guardar la contraseña en texto plano.
+    /// Genera un hash SHA-256 de la contraseña.
     /// </summary>
     private string HashPassword(string password)
     {
