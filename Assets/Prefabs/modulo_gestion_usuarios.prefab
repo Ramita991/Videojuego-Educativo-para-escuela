@@ -68,6 +68,8 @@ MonoBehaviour:
   usuariosPorPagina: 4
   panelGestionUsuarios: {fileID: 62149636486883366}
   panelDesactivarUsuario: {fileID: 0}
+  panelPerfilUsuario: {fileID: 0}
+  panelCrearUsuario: {fileID: 0}
 --- !u!1 &69268826699195688
 GameObject:
   m_ObjectHideFlags: 0
